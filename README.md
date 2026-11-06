@@ -1,86 +1,154 @@
 # 💧 Reservorio comunitario en tiempos de sequía — La Paz, Bolivia
 
 **Desafío individual · Métodos Numéricos**
-EDO de primer orden con condición inicial · Heun · Runge-Kutta 4 · Solución analítica
+
+EDO de primer orden con condición inicial · Método de Heun · Runge-Kutta 4 · Solución analítica
 
 - **Autora:** Tarqui Humerez Mayra Belen
 - **Materia:** Métodos Numéricos
 - **Aplicación web:** https://desafio-ecuaciones-diferenciales-a9jrw6aht6t4r2dze7pukp.streamlit.app/
-- **Video (1 min):** _pega aquí el enlace_
+- **Video (1 min):** _Pega aquí el enlace_
 
-> Los parámetros del modelo son **hipotéticos**. Los resultados son simulaciones del modelo,
-> no predicciones comprobadas con datos reales.
+> **Nota:** Los parámetros del modelo son hipotéticos. Los resultados representan simulaciones matemáticas y no predicciones comprobadas con datos reales.
 
-## Problema
-El fenómeno de El Niño puede reducir las lluvias y el aporte de agua a un reservorio comunitario
-de un barrio (hipotético) de la ciudad de La Paz. Cuando el volumen baja, aparecen racionamientos
-y tensiones entre vecinos.
+## 1. Problema
 
-**Pregunta:** ¿en cuántos días el volumen baja del umbral mínimo (300 m³) y qué aporte diario
-haría falta para evitarlo?
+El fenómeno de El Niño puede reducir las lluvias y el aporte de agua a un reservorio comunitario de un barrio hipotético de la ciudad de La Paz. Cuando el volumen almacenado disminuye, pueden presentarse racionamientos y tensiones entre los vecinos.
 
-## Modelo matemático
-```
-dV/dt = a − k·V ,   V(0) = V₀
+**Pregunta principal:** ¿En cuántos días el volumen de agua alcanza el umbral mínimo de 300 m³ y qué aporte diario sería necesario para evitar que el reservorio descienda por debajo de ese nivel?
+
+## 2. Modelo matemático
+
+Se plantea una ecuación diferencial ordinaria de primer orden:
+
+```text
+dV/dt = a − k·V,   V(0) = V₀
 ```
 
 | Símbolo | Significado | Unidad |
 |---|---|---|
 | V(t) | Volumen de agua en el reservorio | m³ |
 | t | Tiempo | días |
-| a | Aporte durante la sequía | m³/día |
+| a | Aporte diario de agua durante la sequía | m³/día |
 | k | Tasa de salida por consumo y pérdidas | 1/día |
-| V₀ | Volumen inicial | m³ |
+| V₀ | Volumen inicial del reservorio | m³ |
 
-**Supuestos:** aporte constante, salida proporcional al volumen almacenado, sin lluvias extra.
+**Supuestos del modelo:**
+- El aporte de agua permanece constante durante la simulación.
+- La salida de agua es proporcional al volumen almacenado.
+- No se consideran lluvias adicionales ni otros aportes extraordinarios.
 
-**Parámetros base (hipotéticos):** V₀ = 500 m³, a = 10 m³/día, k = 0,04 día⁻¹, T = 60 días,
-umbral = 300 m³.
+**Parámetros base (hipotéticos):**
 
-## Solución analítica
-```
-V(t) = a/k + (V₀ − a/k)·e^(−k t)          →   V(t) = 250 + 250·e^(−0,04 t)
-t* = (1/k)·ln[(V₀ − a/k)/(V_c − a/k)]     →   t* ≈ 40,2 días
-a_min = k·V_c                              →   a_min = 12 m³/día
-```
-Verificación por sustitución: ver la pestaña «Solución analítica» de la app.
+- Volumen inicial: V₀ = 500 m³
+- Aporte diario: a = 10 m³/día
+- Tasa de salida: k = 0,04 día⁻¹
+- Tiempo de simulación: T = 60 días
+- Umbral mínimo: Vc = 300 m³
 
-## Métodos numéricos
-- **Heun (RK2):** `V* = Vₙ + h·f(Vₙ)`; `Vₙ₊₁ = Vₙ + (h/2)[f(Vₙ) + f(V*)]`
-- **RK4:** `Vₙ₊₁ = Vₙ + (h/6)(k₁ + 2k₂ + 2k₃ + k₄)`
+## 3. Solución analítica
 
-Ambos usan los mismos parámetros, condición inicial, intervalo y paso h. La app compara dos
-tamaños de paso (h₁ y h₂), muestra la tabla por pasos, la gráfica y los errores absoluto y
-relativo porcentual.
+La solución exacta de la ecuación diferencial es:
 
-## Estructura del proyecto
-```
-app.py            Interfaz web (Streamlit)
-modelo.py         EDO, solución analítica, Heun, RK4, errores
-db.py             Base de datos SQLite para guardar informes
-requirements.txt  Dependencias
-informes.db       Se crea automáticamente al ejecutar la app
+```text
+V(t) = a/k + (V₀ − a/k)·e^(−kt)
 ```
 
-## Ejecución local
+Sustituyendo los parámetros iniciales:
+
+```text
+V(t) = 250 + 250·e^(−0,04t)
+```
+
+El tiempo en que el volumen alcanza el umbral mínimo se obtiene mediante:
+
+```text
+t* = (1/k)·ln[(V₀ − a/k)/(Vc − a/k)]
+
+t* ≈ 40,2 días
+```
+
+El aporte mínimo necesario para mantener el volumen de equilibrio en el umbral se calcula mediante:
+
+```text
+a_min = k·Vc
+
+a_min = 12 m³/día
+```
+
+La aplicación permite verificar estos resultados mediante sustitución en la pestaña **«Solución analítica»**.
+
+## 4. Métodos numéricos
+
+Para aproximar la solución de la ecuación diferencial se implementaron dos métodos numéricos:
+
+**Método de Heun (RK2)**
+
+```text
+V* = Vₙ + h·f(Vₙ)
+
+Vₙ₊₁ = Vₙ + (h/2)·[f(Vₙ) + f(V*)]
+```
+
+**Método de Runge-Kutta de cuarto orden (RK4)**
+
+```text
+Vₙ₊₁ = Vₙ + (h/6)·(k₁ + 2k₂ + 2k₃ + k₄)
+```
+
+Ambos métodos utilizan los mismos parámetros, condición inicial e intervalo de simulación. La aplicación permite comparar dos tamaños de paso (h₁ y h₂), visualizar los resultados mediante tablas y gráficas, y analizar los errores absolutos y relativos porcentuales.
+
+## 5. Funcionalidades de la aplicación
+
+La aplicación web desarrollada con Streamlit incluye:
+
+- **Simulación:** permite modificar los parámetros y observar la evolución del volumen del reservorio.
+- **Comparación de pasos:** analiza los resultados de Heun y RK4 utilizando diferentes tamaños de paso.
+- **Solución analítica:** presenta el desarrollo matemático, la sustitución de parámetros y el resultado teórico.
+- **Diagnóstico del reservorio:** identifica situaciones críticas, favorables y límite según el volumen de equilibrio y el umbral mínimo.
+- **Gráficas:** representan la evolución del volumen, el umbral mínimo, el volumen de equilibrio y los errores de los métodos.
+- **Historial de informes:** permite guardar, consultar y revisar simulaciones anteriores.
+- **Exportación de resultados:** permite descargar informes en formato PDF y Excel.
+
+## 6. Estructura del proyecto
+
+```text
+app.py            Interfaz web desarrollada con Streamlit
+modelo.py         EDO, solución analítica, Heun, RK4 y errores
+db.py             Gestión de la base de datos SQLite
+requirements.txt  Dependencias del proyecto
+informes.db       Base de datos creada automáticamente
+```
+
+## 7. Ejecución local
+
+Para ejecutar el proyecto en un entorno local:
+
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Base de datos (SQLite)
-Los informes se guardan en `informes.db` (tabla `informes`) con parámetros, errores máximos,
-interpretación y la tabla de resultados. En hostings gratuitos (por ejemplo Streamlit Community
-Cloud) el archivo puede reiniciarse cuando la app se reinicia; por eso la app también permite
-descargar el informe (.md) y la tabla (.csv).
+## 8. Base de datos
 
-## Despliegue (Streamlit Community Cloud)
-1. Sube esta carpeta a un repositorio público de GitHub.
-2. Entra a https://share.streamlit.io, inicia sesión con GitHub y elige «New app».
-3. Selecciona el repositorio, la rama y el archivo principal `app.py`, y pulsa «Deploy».
-4. Copia la URL pública y pégala en este README.
+Se utiliza SQLite para almacenar los informes de simulación en el archivo `informes.db`, dentro de la tabla `informes`.
 
-## Limitaciones
-Modelo simplificado: el aporte real no es constante, el consumo no siempre es proporcional al
-volumen y los parámetros son hipotéticos. Para mayor realismo se podrían contrastar con datos
-oficiales (por ejemplo EPSAS o SENAMHI).
+Los registros incluyen los parámetros utilizados, errores máximos, interpretación y resultados de la simulación.
+
+**Consideración:** en servicios de alojamiento gratuitos, como Streamlit Community Cloud, el almacenamiento local puede ser temporal y perderse cuando se reinicia o se vuelve a desplegar la aplicación. Por ello, se permite descargar los informes en PDF y Excel.
+
+## 9. Despliegue
+
+La aplicación se encuentra publicada mediante **Streamlit Community Cloud** y vinculada a un repositorio de GitHub.
+
+Enlace de acceso:
+
+https://desafio-ecuaciones-diferenciales-a9jrw6aht6t4r2dze7pukp.streamlit.app/
+
+## 10. Limitaciones del modelo
+
+El modelo representa una situación simplificada. En la realidad, el aporte de agua no permanece necesariamente constante, el consumo puede variar y las pérdidas no siempre son proporcionales al volumen almacenado.
+
+Además, los parámetros utilizados son hipotéticos. Para obtener una representación más realista sería necesario contrastarlos con información oficial de instituciones como EPSAS o SENAMHI.
+
+Como trabajo futuro, se podría incorporar información real sobre precipitaciones, consumo de agua y variaciones estacionales para mejorar la precisión de las simulaciones.
