@@ -17,7 +17,7 @@ import modelo as m
 # ---------------------------------------------------------------------------
 # Datos de la entrega (EDITA ESTAS LÍNEAS)
 # ---------------------------------------------------------------------------
-AUTOR = "Tu nombre completo"
+AUTOR = "Tarqui Humerez Mayra Belen"
 MATERIA = "Métodos Numéricos"
 TITULO_DESAFIO = "Reservorio comunitario en tiempos de sequía: ¿cuánto tiempo nos alcanza el agua?"
 
