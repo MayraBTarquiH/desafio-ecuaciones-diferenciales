@@ -201,7 +201,7 @@ def _estilo_ejes(fig, ax):
 
 
 def grafica_curvas(df, titulo):
-    fig, ax = plt.subplots(figsize=(8, 4.5))
+    fig, ax = plt.subplots(figsize=(8, 4))
 
     ax.plot(
         df["t (días)"],
@@ -262,7 +262,7 @@ def grafica_curvas(df, titulo):
         ax.annotate(
             f"Día {t_umbral:.2f}\n{Vc:,.0f} m³",
             xy=(t_umbral, Vc),
-            xytext=(12, 14),
+            xytext=(8, 8),
             textcoords="offset points",
             fontsize=8,
             color=C_TEXTO,
@@ -289,10 +289,17 @@ def grafica_curvas(df, titulo):
     ax.set_ylabel("Volumen V (m³)")
     ax.set_title(titulo)
 
-    ax.legend(fontsize=8, facecolor=C_PANEL, edgecolor="#BFDDF1")
-
+    ax.legend(
+    fontsize=7,
+    loc="upper center",
+    bbox_to_anchor=(0.5, 1.02),
+    ncol=3,
+    facecolor=C_PANEL,
+    edgecolor="#BFDDF1",
+    framealpha=0.95,
+    )
     _estilo_ejes(fig, ax)
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0, 1, 0.90])
 
     return fig
 
