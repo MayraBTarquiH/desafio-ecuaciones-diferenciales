@@ -589,7 +589,7 @@ with tab_teoria:
         rf"({V0 - v_inf:.4f})e^{{-{k:g}({T:g})}}"
     )
 
-   volumen_final_teorico = v_inf + (V0 - v_inf) * __import__("math").exp(-k * T)
+    volumen_final_teorico = v_inf + (V0 - v_inf) * __import__("math").exp(-k * T)
 
     st.latex(
         rf"\boxed{{V({T:g}) = {volumen_final_teorico:.4f}\ m^3}}"
