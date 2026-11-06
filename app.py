@@ -51,8 +51,8 @@ C_FONDO = "#F3FAFE"
 C_PANEL = "#FFFFFF"
 C_TEXTO = "#1F3A4D"
 C_EXACTA = "#1F4E79"   # azul marino suave
-C_HEUN = "#6BB3E0"     # celeste
-C_RK4 = "#3FA7A0"      # turquesa
+C_HEUN = "#E58A35"  # Naranja
+C_RK4 = "#2878B8"   # Azul
 C_UMBRAL = "#E59A9A"   # coral pastel
 C_EQUILIBRIO = "#8FA8B8"
 
