@@ -901,7 +901,7 @@ with tab_hist:
             tabla_resultados.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#176B9A")),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("GRID", (0, 0), (-1, -1), 0.4, colors.green),
+                ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
                 ("FONTSIZE", (0, 0), (-1, -1), 7),
                 ("PADDING", (0, 0), (-1, -1), 5),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
