@@ -801,59 +801,98 @@ with tab_comp:
 
 # ---- Solución analítica ---------------------------------------------------
 with tab_teoria:
-    st.subheader("Solución analítica de la EDO")
-    st.markdown("EDO lineal de primer orden con condición inicial:")
+    st.subheader("Solución analítica de la EDO (paso a paso)")
+    st.markdown(
+        "Resolvemos el problema de valor inicial (EDO + condición inicial) con el "
+        "**método de separación de variables**."
+    )
     st.latex(r"\frac{dV}{dt} = a - kV, \qquad V(0)=V_0")
-    st.markdown("Reescribimos como `dV/dt + kV = a` y usamos el factor integrante `e^{kt}`:")
-    st.latex(r"\frac{d}{dt}\left(V e^{kt}\right) = a e^{kt} \;\Rightarrow\; V e^{kt} = \frac{a}{k}e^{kt} + C")
-    st.latex(r"V(t) = \frac{a}{k} + C e^{-kt}, \qquad C = V_0 - \frac{a}{k}")
+
+    st.markdown("**Paso 1. Separar las variables.** Pasamos todo lo que depende de V a un lado y lo que depende de t al otro (suponiendo $a - kV \\neq 0$):")
+    st.latex(r"\frac{dV}{a - kV} = dt")
+
+    st.markdown("**Paso 2. Integrar ambos lados.**")
+    st.latex(r"\int \frac{dV}{a - kV} = \int dt")
+    st.latex(r"-\frac{1}{k}\ln\left|a - kV\right| = t + C_1")
+
+    st.markdown("**Paso 3. Despejar V.** Multiplicamos por $-k$ y aplicamos la exponencial:")
+    st.latex(r"\ln\left|a - kV\right| = -kt - kC_1")
+    st.latex(r"a - kV = C\,e^{-kt} \qquad (C = \pm e^{-kC_1})")
+    st.latex(r"V(t) = \frac{a}{k} - \frac{C}{k}\,e^{-kt} = \frac{a}{k} + A\,e^{-kt} \qquad \left(A = -\frac{C}{k}\right)")
+    st.caption(
+        "Si $a - kV = 0$, es decir $V = a/k$, también es solución (equilibrio): queda incluida con $A = 0$."
+    )
+
+    st.markdown("**Paso 4. Aplicar la condición inicial** $V(0)=V_0$ para hallar la constante A:")
+    st.latex(r"V(0) = \frac{a}{k} + A\,e^{0} = V_0 \;\Rightarrow\; A = V_0 - \frac{a}{k}")
+
+    st.markdown("**Paso 5. Solución particular.**")
     st.latex(r"\boxed{V(t) = \frac{a}{k} + \left(V_0 - \frac{a}{k}\right)e^{-kt}}")
 
-    st.subheader("Aplicación de la solución con los datos ingresados")
-    
-    st.markdown("**Sustituyendo los valores de la simulación:**")
-    
+    st.divider()
+    st.subheader("Aplicación con los datos ingresados")
+
+    st.markdown("**Paso 6. Sustituir los valores de la simulación:**")
     st.latex(
         rf"V(t) = \frac{{{a:g}}}{{{k:g}}} + "
         rf"\left({V0:g} - \frac{{{a:g}}}{{{k:g}}}\right)"
         rf"e^{{-{k:g}t}}"
     )
-
     st.markdown("**Simplificando:**")
-    
-    st.latex(
-        rf"V(t) = {v_inf:.4f} + "
-        rf"({V0 - v_inf:.4f})e^{{-{k:g}t}}"
-    )
+    st.latex(rf"V(t) = {v_inf:.4f} + ({V0 - v_inf:.4f})\,e^{{-{k:g}t}}")
 
     st.markdown("**Volumen al finalizar el tiempo de simulación:**")
-    
-    st.latex(
-        rf"V({T:g}) = {v_inf:.4f} + "
-        rf"({V0 - v_inf:.4f})e^{{-{k:g}({T:g})}}"
-    )
+    st.latex(rf"V({T:g}) = {v_inf:.4f} + ({V0 - v_inf:.4f})\,e^{{-{k:g}({T:g})}}")
+    volumen_final_teorico = float(m.solucion_analitica(T, V0, a, k))
+    st.latex(rf"\boxed{{V({T:g}) = {volumen_final_teorico:.4f}\ \text{{m}}^3}}")
 
-    volumen_final_teorico = v_inf + (V0 - v_inf) * __import__("math").exp(-k * T)
-
-    st.latex(
-        rf"\boxed{{V({T:g}) = {volumen_final_teorico:.4f}\ m^3}}"
-    )
-
-    st.markdown("**Verificación por sustitución**")
+    st.divider()
+    st.subheader("Verificación por sustitución")
+    st.markdown("**Paso 7. Comprobar que la solución cumple la EDO.** Derivamos V(t):")
     st.latex(r"V'(t) = -k\left(V_0-\tfrac{a}{k}\right)e^{-kt}")
-    st.latex(r"a - kV(t) = a - a - k\left(V_0-\tfrac{a}{k}\right)e^{-kt} = V'(t) \;\checkmark")
-    st.latex(r"V(0) = \tfrac{a}{k} + V_0 - \tfrac{a}{k} = V_0 \;\checkmark")
-
-    st.markdown("**Tiempo hasta el umbral** (si `V₀ > V_c > a/k`):")
-    st.latex(r"t^* = \frac{1}{k}\ln\!\left(\frac{V_0 - a/k}{V_c - a/k}\right)")
-    st.markdown("**Aporte mínimo para sostener el umbral:**")
-    st.latex(r"a_{\min} = k\,V_c")
-
-    st.markdown("**Métodos numéricos usados** (con `f(V) = a − kV`):")
-    st.latex(r"\text{Heun: } V^* = V_n + h f(V_n),\quad V_{n+1} = V_n + \tfrac{h}{2}\left[f(V_n)+f(V^*)\right]")
+    st.markdown("Calculamos el lado derecho de la EDO, $a - kV(t)$:")
     st.latex(
-        r"\text{RK4: } V_{n+1} = V_n + \tfrac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)"
+        r"a - kV(t) = a - k\left[\tfrac{a}{k} + \left(V_0-\tfrac{a}{k}\right)e^{-kt}\right] "
+        r"= a - a - k\left(V_0-\tfrac{a}{k}\right)e^{-kt} = -k\left(V_0-\tfrac{a}{k}\right)e^{-kt}"
     )
+    st.latex(r"V'(t) = a - kV(t) \;\checkmark")
+    st.markdown("**Paso 8. Comprobar la condición inicial:**")
+    st.latex(r"V(0) = \tfrac{a}{k} + \left(V_0 - \tfrac{a}{k}\right)e^{0} = V_0 \;\checkmark")
+
+    st.divider()
+    st.subheader("Respuestas a la pregunta del desafío")
+
+    st.markdown("**Paso 9. Tiempo en que el volumen llega al umbral** $V_c$. Igualamos $V(t^*) = V_c$ y despejamos:")
+    st.latex(r"\frac{a}{k} + \left(V_0 - \frac{a}{k}\right)e^{-kt^*} = V_c")
+    st.latex(r"e^{-kt^*} = \frac{V_c - a/k}{V_0 - a/k}")
+    st.latex(r"t^* = \frac{1}{k}\ln\!\left(\frac{V_0 - a/k}{V_c - a/k}\right) \qquad (\text{si } V_0 > V_c > a/k)")
+
+    if V0 <= Vc:
+        st.info("Con estos datos el volumen inicial ya está en o por debajo del umbral (t* = 0).")
+    elif t_umbral is None:
+        st.info(
+            f"Con estos datos el umbral ({Vc:g} m³) es menor o igual al equilibrio "
+            f"({v_inf:.4f} m³), así que el volumen nunca baja hasta el umbral."
+        )
+    else:
+        st.latex(
+            rf"t^* = \frac{{1}}{{{k:g}}}\ln\!\left(\frac{{{V0:g} - {v_inf:.4f}}}{{{Vc:g} - {v_inf:.4f}}}\right) "
+            rf"= \frac{{1}}{{{k:g}}}\ln\!\left(\frac{{{V0 - v_inf:.4f}}}{{{Vc - v_inf:.4f}}}\right)"
+        )
+        st.latex(rf"\boxed{{t^* \approx {t_umbral:.2f}\ \text{{días}}}}")
+
+    st.markdown(
+        "**Paso 10. Aporte mínimo para sostener el umbral.** A largo plazo el volumen tiende a "
+        "$a/k$ (porque $e^{-kt} \\to 0$). Para que no baje de $V_c$ se necesita $a/k \\geq V_c$:"
+    )
+    st.latex(r"a_{\min} = k\,V_c")
+    st.latex(rf"a_{{\min}} = {k:g} \cdot {Vc:g} = {a_min:.2f}\ \text{{m}}^3/\text{{día}}")
+
+    st.divider()
+    st.subheader("Métodos numéricos usados")
+    st.markdown("Con $f(V) = a - kV$:")
+    st.latex(r"\text{Heun: } V^* = V_n + h f(V_n),\quad V_{n+1} = V_n + \tfrac{h}{2}\left[f(V_n)+f(V^*)\right]")
+    st.latex(r"\text{RK4: } V_{n+1} = V_n + \tfrac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)")
     st.latex(
         r"k_1=f(V_n),\; k_2=f(V_n+\tfrac{h}{2}k_1),\; k_3=f(V_n+\tfrac{h}{2}k_2),\; k_4=f(V_n+h k_3)"
     )
@@ -1163,4 +1202,3 @@ with tab_hist:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True,
                 )
-
