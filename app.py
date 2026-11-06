@@ -202,17 +202,98 @@ def _estilo_ejes(fig, ax):
 
 def grafica_curvas(df, titulo):
     fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(df["t (días)"], df["V exacto (m³)"], "-", color=C_EXACTA, lw=2.2, label="Solución analítica")
-    ax.plot(df["t (días)"], df["V Heun (m³)"], "s--", color=C_HEUN, ms=5, label="Heun")
-    ax.plot(df["t (días)"], df["V RK4 (m³)"], "o:", color=C_RK4, ms=5, label="RK4")
-    ax.axhline(Vc, color=C_UMBRAL, ls="--", lw=1.3, label=f"Umbral ({Vc:,.0f} m³)")
-    ax.axhline(v_inf, color=C_EQUILIBRIO, ls=":", lw=1.3, label=f"Equilibrio a/k ({v_inf:,.1f} m³)")
+
+    ax.plot(
+        df["t (días)"],
+        df["V exacto (m³)"],
+        "-",
+        color=C_EXACTA,
+        lw=2.2,
+        label="Solución analítica",
+    )
+
+    ax.plot(
+        df["t (días)"],
+        df["V Heun (m³)"],
+        "s--",
+        color=C_HEUN,
+        ms=5,
+        label="Heun",
+    )
+
+    ax.plot(
+        df["t (días)"],
+        df["V RK4 (m³)"],
+        "o:",
+        color=C_RK4,
+        ms=5,
+        label="RK4",
+    )
+
+    ax.axhline(
+        Vc,
+        color=C_UMBRAL,
+        ls="--",
+        lw=1.3,
+        label=f"Umbral ({Vc:,.0f} m³)",
+    )
+
+    # Marcar el momento en que se alcanza el umbral
+    if t_umbral is not None and t_umbral <= df["t (días)"].iloc[-1]:
+
+        ax.axvline(
+            t_umbral,
+            color=C_UMBRAL,
+            ls="-.",
+            lw=1.5,
+            label="Día de cruce del umbral",
+        )
+
+        ax.scatter(
+            t_umbral,
+            Vc,
+            color="#D65F5F",
+            s=85,
+            zorder=5,
+            edgecolors="white",
+            linewidths=1.2,
+        )
+
+        ax.annotate(
+            f"Día {t_umbral:.2f}\n{Vc:,.0f} m³",
+            xy=(t_umbral, Vc),
+            xytext=(12, 14),
+            textcoords="offset points",
+            fontsize=8,
+            color=C_TEXTO,
+            bbox=dict(
+                boxstyle="round,pad=0.3",
+                fc=C_PANEL,
+                ec="#BFDDF1",
+            ),
+            arrowprops=dict(
+                arrowstyle="->",
+                color=C_UMBRAL,
+            ),
+        )
+
+    ax.axhline(
+        v_inf,
+        color=C_EQUILIBRIO,
+        ls=":",
+        lw=1.3,
+        label=f"Equilibrio a/k ({v_inf:,.1f} m³)",
+    )
+
     ax.set_xlabel("Tiempo (días)")
     ax.set_ylabel("Volumen V (m³)")
     ax.set_title(titulo)
+
     ax.legend(fontsize=8, facecolor=C_PANEL, edgecolor="#BFDDF1")
+
     _estilo_ejes(fig, ax)
     fig.tight_layout()
+
     return fig
 
 
