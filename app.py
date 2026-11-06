@@ -614,13 +614,24 @@ with tab_teoria:
         r"k_1=f(V_n),\; k_2=f(V_n+\tfrac{h}{2}k_1),\; k_3=f(V_n+\tfrac{h}{2}k_2),\; k_4=f(V_n+h k_3)"
     )
 
+
 # ---- Historial ------------------------------------------------------------
 with tab_hist:
     st.subheader("Informes guardados")
+
     informes = db.listar_informes()
+
     if not informes:
         st.info("Aún no hay informes guardados. Ejecuta una simulación y pulsa «Guardar».")
     else:
+        # Resumen de informes
+        st.metric("Total de informes guardados", len(informes))
+
+        st.divider()
+
+        # Tabla general de informes
+        st.subheader("Listado de informes")
+
         lista = pd.DataFrame(informes).rename(
             columns={
                 "id": "ID",
@@ -637,16 +648,115 @@ with tab_hist:
                 "err_max_rk4": "Err. máx. RK4 (m³)",
             }
         )
+
         st.dataframe(lista, width="stretch", hide_index=True)
 
-        elegido = st.selectbox("Abrir informe", [i["id"] for i in informes])
-        inf = db.obtener_informe(elegido)
-        if inf:
-            st.markdown(f"**Informe #{inf['id']}** · {inf['fecha']} · {inf['titulo'] or 'Sin título'}")
-            st.write(
-                f"V₀ = {inf['v0']:,.2f} m³ · a = {inf['a']:,.2f} m³/día · "
-                f"k = {inf['k']:.4f} 1/día · h = {inf['h']:g} días · "
-                f"T = {inf['t_final']:,.1f} días · umbral = {inf['v_umbral']:,.2f} m³"
+        st.divider()
+
+        # Selección del informe
+        st.subheader("Consultar informe")
+
+        opciones = {
+            i["id"]: (
+                f"Informe #{i['id']} — {i['fecha']} — "
+                f"{i['titulo'] or 'Sin título'}"
             )
-            st.write(inf["interpretacion"])
-            st.dataframe(pd.DataFrame(inf["tabla"]), width="stretch", hide_index=True)
+            for i in informes
+        }
+
+        elegido = st.selectbox(
+            "Selecciona el informe que deseas consultar",
+            list(opciones.keys()),
+            format_func=lambda x: opciones[x]
+        )
+
+        inf = db.obtener_informe(elegido)
+
+        if inf:
+            st.markdown(
+                f"**Informe #{inf['id']}** · {inf['fecha']} · "
+                f"**{inf['titulo'] or 'Sin título'}**"
+            )
+
+            # Parámetros utilizados
+            st.markdown("### Parámetros de la simulación")
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric("Volumen inicial", f"{inf['v0']:,.2f} m³")
+            col2.metric("Aporte diario", f"{inf['a']:,.2f} m³/día")
+            col3.metric("Coeficiente k", f"{inf['k']:.4f}")
+
+            col4, col5, col6 = st.columns(3)
+
+            col4.metric("Paso h", f"{inf['h']:g} días")
+            col5.metric("Tiempo final", f"{inf['t_final']:,.1f} días")
+            col6.metric("Umbral mínimo", f"{inf['v_umbral']:,.2f} m³")
+
+            # Interpretación
+            st.markdown("### Interpretación de resultados")
+            st.info(inf["interpretacion"])
+
+            # Tabla de resultados
+            st.markdown("### Tabla de resultados")
+
+            tabla_df = pd.DataFrame(inf["tabla"])
+
+            st.dataframe(
+                tabla_df,
+                width="stretch",
+                hide_index=True
+            )
+
+            # Descargas
+            st.markdown("### Descargar informe")
+
+            csv_tabla = tabla_df.to_csv(index=False)
+
+            contenido_md = f"""# Informe de simulación del reservorio
+
+## Información general
+
+- **ID:** {inf['id']}
+- **Fecha:** {inf['fecha']}
+- **Título:** {inf['titulo'] or 'Sin título'}
+
+## Parámetros utilizados
+
+- Volumen inicial: {inf['v0']} m³
+- Aporte diario: {inf['a']} m³/día
+- Coeficiente k: {inf['k']} 1/día
+- Paso de integración: {inf['h']} días
+- Tiempo final: {inf['t_final']} días
+- Umbral mínimo: {inf['v_umbral']} m³
+
+## Interpretación
+
+{inf['interpretacion']}
+
+## Tabla de resultados
+
+```csv
+{csv_tabla}
+```
+"""
+
+            col_md, col_csv = st.columns(2)
+
+            with col_md:
+                st.download_button(
+                    "Descargar informe Markdown",
+                    data=contenido_md,
+                    file_name=f"informe_reservorio_{inf['id']}.md",
+                    mime="text/markdown",
+                    use_container_width=True
+                )
+
+            with col_csv:
+                st.download_button(
+                    "Descargar tabla CSV",
+                    data=csv_tabla,
+                    file_name=f"tabla_reservorio_{inf['id']}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
