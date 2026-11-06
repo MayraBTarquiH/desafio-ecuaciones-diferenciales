@@ -52,7 +52,7 @@ C_PANEL = "#FFFFFF"
 C_TEXTO = "#1F3A4D"
 C_EXACTA = "#1F4E79"   # azul marino suave
 C_HEUN = "#F27805"  # Naranja
-C_RK4 = "#2E88D1"   # Azul
+C_RK4 = "#51A2FF"   # Azul
 C_UMBRAL = "#E59A9A"   # coral pastel
 C_EQUILIBRIO = "#8FA8B8"
 
