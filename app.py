@@ -126,26 +126,50 @@ extra durante el periodo simulado. Es un modelo simplificado y no una predicció
 # Entradas (barra lateral) con validación básica
 # ---------------------------------------------------------------------------
 st.sidebar.header("Parámetros de la simulación")
+
+# Valores originales del problema
+if st.sidebar.button("↩️ Restablecer valores originales", use_container_width=True):
+    st.session_state["V0"] = 500.0
+    st.session_state["a"] = 10.0
+    st.session_state["k"] = 0.04
+    st.session_state["Vc"] = 300.0
+    st.session_state["T"] = 60.0
+    st.session_state["h"] = 10.0
+    st.session_state["h2"] = 2.0
+
 V0 = st.sidebar.number_input(
-    "Volumen inicial V₀ (m³)", min_value=0.0, value=500.0, step=10.0, format="%.2f"
+    "Volumen inicial V₀ (m³)", min_value=0.0, value=500.0,
+    step=10.0, format="%.2f", key="V0"
 )
+
 a = st.sidebar.number_input(
-    "Aporte durante la sequía a (m³/día)", min_value=0.0, value=10.0, step=0.5, format="%.2f"
+    "Aporte durante la sequía a (m³/día)", min_value=0.0, value=10.0,
+    step=0.5, format="%.2f", key="a"
 )
+
 k = st.sidebar.number_input(
-    "Tasa de salida k (1/día)", min_value=0.0001, value=0.04, step=0.005, format="%.4f"
+    "Tasa de salida k (1/día)", min_value=0.0001, value=0.04,
+    step=0.005, format="%.4f", key="k"
 )
+
 Vc = st.sidebar.number_input(
-    "Umbral de volumen mínimo (m³)", min_value=0.0, value=300.0, step=10.0, format="%.2f"
+    "Umbral de volumen mínimo (m³)", min_value=0.0, value=300.0,
+    step=10.0, format="%.2f", key="Vc"
 )
+
 T = st.sidebar.number_input(
-    "Tiempo de simulación (días)", min_value=1.0, value=60.0, step=1.0, format="%.1f"
+    "Tiempo de simulación (días)", min_value=1.0, value=60.0,
+    step=1.0, format="%.1f", key="T"
 )
+
 h = st.sidebar.number_input(
-    "Tamaño de paso h₁ (días)", min_value=0.01, value=10.0, step=0.5, format="%.2f"
+    "Tamaño de paso h₁ (días)", min_value=0.01, value=10.0,
+    step=0.5, format="%.2f", key="h"
 )
+
 h2 = st.sidebar.number_input(
-    "Segundo tamaño de paso h₂ (días)", min_value=0.01, value=2.0, step=0.5, format="%.2f"
+    "Segundo tamaño de paso h₂ (días)", min_value=0.01, value=2.0,
+    step=0.5, format="%.2f", key="h2"
 )
 
 errores = []
@@ -454,10 +478,205 @@ with tab_sim:
     st.subheader("Interpretación para la comunidad")
     st.write(texto_interp)
 
+    
     st.subheader("Guardar informe")
-    titulo_informe = st.text_input("Título del informe (opcional)", max_chars=80)
+
+    titulo_informe = st.text_input(
+        "Título del informe (opcional)",
+        max_chars=80
+    )
+
+    # -----------------------------------------
+    # ARCHIVO EXCEL
+    # -----------------------------------------
+    excel_buffer = BytesIO()
+
+    parametros = pd.DataFrame({
+        "Parámetro": [
+            "Volumen inicial (m³)",
+            "Aporte diario (m³/día)",
+            "Coeficiente k (1/día)",
+            "Paso de integración (días)",
+            "Tiempo final (días)",
+            "Umbral mínimo (m³)",
+        ],
+        "Valor": [V0, a, k, h, T, Vc],
+    })
+
+    interpretacion_df = pd.DataFrame({
+        "Interpretación": [texto_interp]
+    })
+
+    with pd.ExcelWriter(
+        excel_buffer,
+        engine="openpyxl"
+    ) as writer:
+        parametros.to_excel(
+            writer,
+            sheet_name="Parametros",
+            index=False
+        )
+
+        df1.to_excel(
+            writer,
+            sheet_name="Resultados",
+            index=False
+        )
+
+        interpretacion_df.to_excel(
+            writer,
+            sheet_name="Interpretacion",
+            index=False
+        )
+
+    excel_buffer.seek(0)
+
+    # -----------------------------------------
+    # ARCHIVO PDF
+    # -----------------------------------------
+    pdf_buffer = BytesIO()
+
+    documento = SimpleDocTemplate(
+        pdf_buffer,
+        pagesize=landscape(A4),
+        rightMargin=1.5 * cm,
+        leftMargin=1.5 * cm,
+        topMargin=1.5 * cm,
+        bottomMargin=1.5 * cm,
+    )
+
+    estilos = getSampleStyleSheet()
+
+    titulo_estilo = ParagraphStyle(
+        "TituloSimulacion",
+        parent=estilos["Title"],
+        alignment=TA_CENTER,
+        textColor=colors.HexColor("#176B9A"),
+        fontSize=18,
+        spaceAfter=15,
+    )
+
+    subtitulo_estilo = ParagraphStyle(
+        "SubtituloSimulacion",
+        parent=estilos["Heading2"],
+        textColor=colors.HexColor("#176B9A"),
+        fontSize=12,
+        spaceBefore=10,
+        spaceAfter=8,
+    )
+
+    contenido = []
+
+    contenido.append(
+        Paragraph(
+            "Informe de simulación del reservorio",
+            titulo_estilo
+        )
+    )
+
+    contenido.append(
+        Paragraph(
+            f"Título: {escape(titulo_informe or 'Simulación del reservorio')}",
+            estilos["Normal"]
+        )
+    )
+
+    contenido.append(Spacer(1, 15))
+
+    contenido.append(
+        Paragraph(
+            "Parámetros de la simulación",
+            subtitulo_estilo
+        )
+    )
+
+    datos_parametros = [
+        ["Parámetro", "Valor"],
+        ["Volumen inicial", f"{V0:,.2f} m³"],
+        ["Aporte diario", f"{a:,.2f} m³/día"],
+        ["Coeficiente k", f"{k:.4f} 1/día"],
+        ["Paso de integración", f"{h:g} días"],
+        ["Tiempo final", f"{T:,.1f} días"],
+        ["Umbral mínimo", f"{Vc:,.2f} m³"],
+    ]
+
+    tabla_parametros = Table(
+        datos_parametros,
+        colWidths=[7 * cm, 7 * cm]
+    )
+
+    tabla_parametros.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#176B9A")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("PADDING", (0, 0), (-1, -1), 7),
+    ]))
+
+    contenido.append(tabla_parametros)
+
+    contenido.append(
+        Paragraph(
+            "Interpretación de resultados",
+            subtitulo_estilo
+        )
+    )
+
+    contenido.append(
+        Paragraph(
+            escape(str(texto_interp)),
+            estilos["Normal"]
+        )
+    )
+
+    contenido.append(
+        Paragraph(
+            "Tabla de resultados",
+            subtitulo_estilo
+        )
+    )
+
+    datos_tabla = [
+        [
+            Paragraph(escape(str(col)), estilos["Normal"])
+            for col in df1.columns
+        ]
+    ]
+
+    for fila in df1.itertuples(index=False, name=None):
+        datos_tabla.append([
+            str(valor) for valor in fila
+        ])
+
+    tabla_resultados = Table(
+        datos_tabla,
+        repeatRows=1,
+        hAlign="LEFT"
+    )
+
+    tabla_resultados.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#176B9A")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+        ("FONTSIZE", (0, 0), (-1, -1), 7),
+        ("PADDING", (0, 0), (-1, -1), 5),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+
+    contenido.append(tabla_resultados)
+
+    documento.build(contenido)
+
+    pdf_buffer.seek(0)
+
+    # -----------------------------------------
+    # BOTONES
+    # -----------------------------------------
     cg1, cg2, cg3 = st.columns(3)
-    if cg1.button("💾 Guardar en la base de datos"):
+
+    if cg1.button(
+        "💾 Guardar en la base de datos",
+        use_container_width=True
+    ):
         nuevo_id = db.guardar_informe(
             titulo_informe,
             V0,
@@ -473,19 +692,28 @@ with tab_sim:
             texto_interp,
             df1,
         )
-        st.success(f"Informe #{nuevo_id} guardado. Búscalo en la pestaña «Historial de informes».")
+
+        st.success(
+            f"Informe #{nuevo_id} guardado. "
+            "Búscalo en la pestaña «Historial de informes»."
+        )
+
     cg2.download_button(
-        "⬇️ Descargar informe (.md)",
-        data=informe_markdown(),
-        file_name="informe_reservorio.md",
-        mime="text/markdown",
+        "📄 Descargar informe PDF",
+        data=pdf_buffer.getvalue(),
+        file_name="informe_reservorio.pdf",
+        mime="application/pdf",
+        use_container_width=True,
     )
+
     cg3.download_button(
-        "⬇️ Descargar tabla (.csv)",
-        data=df1.to_csv(index=False),
-        file_name="tabla_reservorio.csv",
-        mime="text/csv",
+        "📊 Descargar informe Excel",
+        data=excel_buffer.getvalue(),
+        file_name="informe_reservorio.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
     )
+
 
 # ---- Comparación de pasos -------------------------------------------------
 with tab_comp:
