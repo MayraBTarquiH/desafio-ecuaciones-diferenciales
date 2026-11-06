@@ -54,7 +54,7 @@ C_EXACTA = "#0062D1"   # azul marino suave
 C_HEUN = "#F27805"  # Naranja
 C_RK4 = "#51A2FF"   # Azul
 C_UMBRAL = "#E59A9A"   # coral pastel
-C_EQUILIBRIO = "#7F9CAD"
+C_EQUILIBRIO = "#63869C"
 
 st.markdown(
     """
