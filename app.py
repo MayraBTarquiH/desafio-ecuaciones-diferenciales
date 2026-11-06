@@ -565,6 +565,30 @@ with tab_teoria:
     st.latex(r"V(t) = \frac{a}{k} + C e^{-kt}, \qquad C = V_0 - \frac{a}{k}")
     st.latex(r"\boxed{V(t) = \frac{a}{k} + \left(V_0 - \frac{a}{k}\right)e^{-kt}}")
 
+    st.subheader("Aplicación de la solución con los datos ingresados")
+    st.markdown("**Sustituyendo los valores de la simulación:**")
+    st.latex(
+        rf"V(t) = \frac{{{a:g}}}{{{k:g}}} + "
+        rf"\left({V0:g} - \frac{{{a:g}}}{{{k:g}}}\right)"
+        rf"e^{{-{k:g}t}}"
+    )
+
+    st.markdown("**Simplificando:**")
+    st.latex(
+        rf"V(t) = {v_inf:.4f} + "
+        rf"({V0 - v_inf:.4f})e^{{-{k:g}t}}"
+    )
+
+    st.markdown("**Volumen al finalizar el tiempo de simulación:**")
+    st.latex(
+        rf"V({T:g}) = {v_inf:.4f} + "
+        rf"({V0 - v_inf:.4f})e^{{-{k:g}({T:g})}}"
+    )
+
+    st.latex(
+        rf"\boxed{{V({T:g}) = {m.solucion_exacta(V0, a, k, T):.4f}\ m^3}}"
+    )
+
     st.markdown("**Verificación por sustitución**")
     st.latex(r"V'(t) = -k\left(V_0-\tfrac{a}{k}\right)e^{-kt}")
     st.latex(r"a - kV(t) = a - a - k\left(V_0-\tfrac{a}{k}\right)e^{-kt} = V'(t) \;\checkmark")
