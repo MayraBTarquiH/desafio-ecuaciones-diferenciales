@@ -270,53 +270,53 @@ tab_sim, tab_comp, tab_teoria, tab_hist = st.tabs(
 
 # ---- Simulación -----------------------------------------------------------
 with tab_sim:
-        c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
-        c1.metric("Volumen de equilibrio", f"{v_inf:,.1f} m³")
-    
-        c2.metric(
-            "Días hasta el umbral",
-            "No se alcanza" if t_umbral is None else f"{t_umbral:,.1f} días",
+    c1.metric("Volumen de equilibrio", f"{v_inf:,.1f} m³")
+
+    c2.metric(
+        "Días hasta el umbral",
+        "No se alcanza" if t_umbral is None else f"{t_umbral:,.1f} días",
+    )
+
+    c3.metric(
+        "Aporte mínimo para el equilibrio en el umbral",
+        f"{a_min:,.2f} m³/día",
+    )
+
+    c4.metric(
+        "Volumen final (exacto)",
+        f"{df1['V exacto (m³)'].iloc[-1]:,.1f} m³",
+    )
+
+    st.subheader("Diagnóstico del reservorio")
+
+    if V0 <= Vc:
+        st.error(
+            "El reservorio comienza en el nivel mínimo o por debajo de él. "
+            "La comunidad ya se encuentra en una situación crítica."
         )
-    
-        c3.metric(
-            "Aporte mínimo para el equilibrio en el umbral",
-            f"{a_min:,.2f} m³/día",
+
+    elif v_inf < Vc:
+        st.error(
+            "Situación crítica: el volumen de equilibrio está por debajo "
+            "del umbral mínimo. Según el modelo, el reservorio terminará "
+            "descendiendo por debajo del nivel requerido."
         )
-    
-        c4.metric(
-            "Volumen final (exacto)",
-            f"{df1['V exacto (m³)'].iloc[-1]:,.1f} m³",
+
+    elif abs(v_inf - Vc) < 1e-9:
+        st.warning(
+            "Situación límite: el volumen de equilibrio coincide con el "
+            "umbral. El reservorio se aproxima a ese nivel, pero no lo "
+            "supera en equilibrio."
         )
-    
-        st.subheader("Diagnóstico del reservorio")
-    
-        if V0 <= Vc:
-            st.error(
-                "El reservorio comienza en el nivel mínimo o por debajo de él. "
-                "La comunidad ya se encuentra en una situación crítica."
-            )
-    
-        elif v_inf < Vc:
-            st.error(
-                "Situación crítica: el volumen de equilibrio está por debajo "
-                "del umbral mínimo. Según el modelo, el reservorio terminará "
-                "descendiendo por debajo del nivel requerido."
-            )
-    
-        elif abs(v_inf - Vc) < 1e-9:
-            st.warning(
-                "Situación límite: el volumen de equilibrio coincide con el "
-                "umbral. El reservorio se aproxima a ese nivel, pero no lo "
-                "supera en equilibrio."
-            )
-    
-        else:
-            st.success(
-                "Situación favorable: el volumen de equilibrio está por encima "
-                "del umbral mínimo. Según el modelo, el reservorio puede "
-                "mantenerse por encima del nivel crítico."
-            )
+
+    else:
+        st.success(
+            "Situación favorable: el volumen de equilibrio está por encima "
+            "del umbral mínimo. Según el modelo, el reservorio puede "
+            "mantenerse por encima del nivel crítico."
+        )
     st.subheader(f"Resultados con h₁ = {h:g} días")
     col_g1, col_g2 = st.columns(2)
     with col_g1:
