@@ -503,6 +503,45 @@ with tab_comp:
         width="stretch",
         hide_index=True,
     )
+    st.subheader("Análisis de precisión")
+
+    mejor_h1 = min(
+        res1["Heun"]["max_abs"],
+        res1["RK4"]["max_abs"],
+    )
+
+    mejor_h2 = min(
+        res2["Heun"]["max_abs"],
+        res2["RK4"]["max_abs"],
+    )
+
+    ganador_h1 = (
+        "Heun"
+        if res1["Heun"]["max_abs"] < res1["RK4"]["max_abs"]
+        else "RK4"
+    )
+
+    ganador_h2 = (
+        "Heun"
+        if res2["Heun"]["max_abs"] < res2["RK4"]["max_abs"]
+        else "RK4"
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.info(
+            f"**Con h₁ = {h:g} días**\n\n"
+            f"Menor error máximo: **{ganador_h1}**\n\n"
+            f"Error: {mejor_h1:.8f} m³"
+        )
+
+    with col2:
+        st.info(
+            f"**Con h₂ = {h2:g} días**\n\n"
+            f"Menor error máximo: **{ganador_h2}**\n\n"
+            f"Error: {mejor_h2:.8f} m³"
+        )
     cc1, cc2 = st.columns(2)
     with cc1:
         st.pyplot(grafica_curvas(df1, f"h₁ = {h:g} días"))
