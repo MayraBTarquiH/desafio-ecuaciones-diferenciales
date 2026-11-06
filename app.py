@@ -29,6 +29,50 @@ st.set_page_config(
 db.init_db()
 
 # ---------------------------------------------------------------------------
+# Estilo: paleta de azules y celestes pastel (tema agua)
+# ---------------------------------------------------------------------------
+C_FONDO = "#F3FAFE"
+C_PANEL = "#FFFFFF"
+C_TEXTO = "#1F3A4D"
+C_EXACTA = "#1F4E79"   # azul marino suave
+C_HEUN = "#6BB3E0"     # celeste
+C_RK4 = "#3FA7A0"      # turquesa
+C_UMBRAL = "#E59A9A"   # coral pastel
+C_EQUILIBRIO = "#8FA8B8"
+
+st.markdown(
+    """
+    <style>
+    h1, h2, h3 { color: #1F4E79; }
+    [data-testid="stSidebar"] { background-color: #DDEFFA; }
+    [data-testid="stMetric"] {
+        background-color: #FFFFFF;
+        border: 1px solid #BFDDF1;
+        border-radius: 14px;
+        padding: 14px 16px;
+        box-shadow: 0 2px 6px rgba(74, 144, 194, 0.12);
+    }
+    [data-testid="stExpander"] {
+        background-color: #FFFFFF;
+        border: 1px solid #BFDDF1;
+        border-radius: 12px;
+    }
+    .stButton > button, .stDownloadButton > button {
+        background-color: #6BB3E0;
+        color: #FFFFFF;
+        border: none;
+        border-radius: 10px;
+    }
+    .stButton > button:hover, .stDownloadButton > button:hover {
+        background-color: #4A90C2;
+        color: #FFFFFF;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
 # Encabezado y explicación del problema
 # ---------------------------------------------------------------------------
 st.title("💧 " + TITULO_DESAFIO)
@@ -144,31 +188,43 @@ COLUMNAS_DECIMALES = {
 }
 
 
+def _estilo_ejes(fig, ax):
+    fig.patch.set_facecolor(C_FONDO)
+    ax.set_facecolor(C_PANEL)
+    ax.grid(color="#CFE5F3", alpha=0.9)
+    for borde in ax.spines.values():
+        borde.set_color("#BFDDF1")
+    ax.tick_params(colors=C_TEXTO)
+    ax.xaxis.label.set_color(C_TEXTO)
+    ax.yaxis.label.set_color(C_TEXTO)
+    ax.title.set_color(C_EXACTA)
+
+
 def grafica_curvas(df, titulo):
     fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(df["t (días)"], df["V exacto (m³)"], "k-", lw=2, label="Solución analítica")
-    ax.plot(df["t (días)"], df["V Heun (m³)"], "s--", ms=5, label="Heun")
-    ax.plot(df["t (días)"], df["V RK4 (m³)"], "o:", ms=5, label="RK4")
-    ax.axhline(Vc, color="red", ls="--", lw=1, label=f"Umbral ({Vc:,.0f} m³)")
-    ax.axhline(v_inf, color="gray", ls=":", lw=1, label=f"Equilibrio a/k ({v_inf:,.1f} m³)")
+    ax.plot(df["t (días)"], df["V exacto (m³)"], "-", color=C_EXACTA, lw=2.2, label="Solución analítica")
+    ax.plot(df["t (días)"], df["V Heun (m³)"], "s--", color=C_HEUN, ms=5, label="Heun")
+    ax.plot(df["t (días)"], df["V RK4 (m³)"], "o:", color=C_RK4, ms=5, label="RK4")
+    ax.axhline(Vc, color=C_UMBRAL, ls="--", lw=1.3, label=f"Umbral ({Vc:,.0f} m³)")
+    ax.axhline(v_inf, color=C_EQUILIBRIO, ls=":", lw=1.3, label=f"Equilibrio a/k ({v_inf:,.1f} m³)")
     ax.set_xlabel("Tiempo (días)")
     ax.set_ylabel("Volumen V (m³)")
     ax.set_title(titulo)
-    ax.grid(alpha=0.3)
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=8, facecolor=C_PANEL, edgecolor="#BFDDF1")
+    _estilo_ejes(fig, ax)
     fig.tight_layout()
     return fig
 
 
 def grafica_errores(df, titulo):
     fig, ax = plt.subplots(figsize=(8, 3.5))
-    ax.plot(df["t (días)"], df["Error abs. Heun (m³)"], "s--", ms=5, label="Heun")
-    ax.plot(df["t (días)"], df["Error abs. RK4 (m³)"], "o:", ms=5, label="RK4")
+    ax.plot(df["t (días)"], df["Error abs. Heun (m³)"], "s--", color=C_HEUN, ms=5, label="Heun")
+    ax.plot(df["t (días)"], df["Error abs. RK4 (m³)"], "o:", color=C_RK4, ms=5, label="RK4")
     ax.set_xlabel("Tiempo (días)")
     ax.set_ylabel("Error absoluto (m³)")
     ax.set_title(titulo)
-    ax.grid(alpha=0.3)
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=8, facecolor=C_PANEL, edgecolor="#BFDDF1")
+    _estilo_ejes(fig, ax)
     fig.tight_layout()
     return fig
 
