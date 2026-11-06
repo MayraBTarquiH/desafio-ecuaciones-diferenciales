@@ -3,9 +3,9 @@
 **Desafío individual · Métodos Numéricos**
 EDO de primer orden con condición inicial · Heun · Runge-Kutta 4 · Solución analítica
 
-- **Autora:** Tu nombre completo
+- **Autora:** Tarqui Humerez Mayra Belen
 - **Materia:** Métodos Numéricos
-- **Aplicación web:** _pega aquí el enlace público_
+- **Aplicación web:** https://desafio-ecuaciones-diferenciales-a9jrw6aht6t4r2dze7pukp.streamlit.app/
 - **Video (1 min):** _pega aquí el enlace_
 
 > Los parámetros del modelo son **hipotéticos**. Los resultados son simulaciones del modelo,
