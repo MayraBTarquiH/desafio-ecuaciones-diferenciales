@@ -14,6 +14,22 @@ import streamlit as st
 import db
 import modelo as m
 
+from io import BytesIO
+from html import escape
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
+
 # ---------------------------------------------------------------------------
 # Datos de la entrega (EDITA ESTAS LÍNEAS)
 # ---------------------------------------------------------------------------
@@ -708,55 +724,215 @@ with tab_hist:
                 hide_index=True
             )
 
+           
             # Descargas
             st.markdown("### Descargar informe")
 
-            csv_tabla = tabla_df.to_csv(index=False)
+            # -----------------------------------------
+            # ARCHIVO EXCEL
+            # -----------------------------------------
+            excel_buffer = BytesIO()
 
-            contenido_md = f"""# Informe de simulación del reservorio
+            parametros = pd.DataFrame({
+                "Parámetro": [
+                    "Volumen inicial (m³)",
+                    "Aporte diario (m³/día)",
+                    "Coeficiente k (1/día)",
+                    "Paso de integración (días)",
+                    "Tiempo final (días)",
+                    "Umbral mínimo (m³)",
+                ],
+                "Valor": [
+                    inf["v0"],
+                    inf["a"],
+                    inf["k"],
+                    inf["h"],
+                    inf["t_final"],
+                    inf["v_umbral"],
+                ],
+            })
 
-## Información general
-
-- **ID:** {inf['id']}
-- **Fecha:** {inf['fecha']}
-- **Título:** {inf['titulo'] or 'Sin título'}
-
-## Parámetros utilizados
-
-- Volumen inicial: {inf['v0']} m³
-- Aporte diario: {inf['a']} m³/día
-- Coeficiente k: {inf['k']} 1/día
-- Paso de integración: {inf['h']} días
-- Tiempo final: {inf['t_final']} días
-- Umbral mínimo: {inf['v_umbral']} m³
-
-## Interpretación
-
-{inf['interpretacion']}
-
-## Tabla de resultados
-
-```csv
-{csv_tabla}
-```
-"""
-
-            col_md, col_csv = st.columns(2)
-
-            with col_md:
-                st.download_button(
-                    "Descargar informe Markdown",
-                    data=contenido_md,
-                    file_name=f"informe_reservorio_{inf['id']}.md",
-                    mime="text/markdown",
-                    use_container_width=True
+            with pd.ExcelWriter(
+                excel_buffer,
+                engine="openpyxl"
+            ) as writer:
+                parametros.to_excel(
+                    writer,
+                    sheet_name="Parametros",
+                    index=False
                 )
 
-            with col_csv:
-                st.download_button(
-                    "Descargar tabla CSV",
-                    data=csv_tabla,
-                    file_name=f"tabla_reservorio_{inf['id']}.csv",
-                    mime="text/csv",
-                    use_container_width=True
+                tabla_df.to_excel(
+                    writer,
+                    sheet_name="Resultados",
+                    index=False
                 )
+
+                interpretacion_df = pd.DataFrame({
+                    "Interpretación": [inf["interpretacion"]]
+                })
+
+                interpretacion_df.to_excel(
+                    writer,
+                    sheet_name="Interpretacion",
+                    index=False
+                )
+
+            excel_buffer.seek(0)
+
+            # -----------------------------------------
+            # ARCHIVO PDF
+            # -----------------------------------------
+            pdf_buffer = BytesIO()
+
+            documento = SimpleDocTemplate(
+                pdf_buffer,
+                pagesize=landscape(A4),
+                rightMargin=1.5 * cm,
+                leftMargin=1.5 * cm,
+                topMargin=1.5 * cm,
+                bottomMargin=1.5 * cm,
+            )
+
+            estilos = getSampleStyleSheet()
+
+            titulo_estilo = ParagraphStyle(
+                "TituloPersonalizado",
+                parent=estilos["Title"],
+                alignment=TA_CENTER,
+                textColor=colors.HexColor("#176B9A"),
+                fontSize=18,
+                spaceAfter=15,
+            )
+
+            subtitulo_estilo = ParagraphStyle(
+                "SubtituloPersonalizado",
+                parent=estilos["Heading2"],
+                textColor=colors.HexColor("#176B9A"),
+                fontSize=12,
+                spaceBefore=10,
+                spaceAfter=8,
+            )
+
+            contenido = []
+
+            contenido.append(
+                Paragraph(
+                    "Informe de simulación del reservorio",
+                    titulo_estilo
+                )
+            )
+
+            contenido.append(
+                Paragraph(
+                    f"Informe #{inf['id']} - {escape(str(inf['titulo'] or 'Sin título'))}",
+                    estilos["Normal"]
+                )
+            )
+
+            contenido.append(
+                Paragraph(
+                    f"Fecha: {escape(str(inf['fecha']))}",
+                    estilos["Normal"]
+                )
+            )
+
+            contenido.append(Spacer(1, 15))
+
+            contenido.append(
+                Paragraph("Parámetros de la simulación", subtitulo_estilo)
+            )
+
+            datos_parametros = [
+                ["Parámetro", "Valor"],
+                ["Volumen inicial", f"{inf['v0']:,.2f} m³"],
+                ["Aporte diario", f"{inf['a']:,.2f} m³/día"],
+                ["Coeficiente k", f"{inf['k']:.4f} 1/día"],
+                ["Paso de integración", f"{inf['h']:g} días"],
+                ["Tiempo final", f"{inf['t_final']:,.1f} días"],
+                ["Umbral mínimo", f"{inf['v_umbral']:,.2f} m³"],
+            ]
+
+            tabla_parametros = Table(
+                datos_parametros,
+                colWidths=[7 * cm, 7 * cm]
+            )
+
+            tabla_parametros.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#176B9A")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("PADDING", (0, 0), (-1, -1), 7),
+            ]))
+
+            contenido.append(tabla_parametros)
+
+            contenido.append(
+                Paragraph("Interpretación de resultados", subtitulo_estilo)
+            )
+
+            contenido.append(
+                Paragraph(
+                    escape(str(inf["interpretacion"])),
+                    estilos["Normal"]
+                )
+            )
+
+            contenido.append(
+                Paragraph("Tabla de resultados", subtitulo_estilo)
+            )
+
+            datos_tabla = [
+                [Paragraph(escape(str(col)), estilos["Normal"])
+                 for col in tabla_df.columns]
+            ]
+
+            for fila in tabla_df.itertuples(index=False, name=None):
+                datos_tabla.append([
+                    str(valor) for valor in fila
+                ])
+
+            tabla_resultados = Table(
+                datos_tabla,
+                repeatRows=1,
+                hAlign="LEFT"
+            )
+
+            tabla_resultados.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#176B9A")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+                ("FONTSIZE", (0, 0), (-1, -1), 7),
+                ("PADDING", (0, 0), (-1, -1), 5),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ]))
+
+            contenido.append(tabla_resultados)
+
+            documento.build(contenido)
+
+            pdf_buffer.seek(0)
+
+            # -----------------------------------------
+            # BOTONES DE DESCARGA
+            # -----------------------------------------
+            col_pdf, col_excel = st.columns(2)
+
+            with col_pdf:
+                st.download_button(
+                    "Descargar informe PDF",
+                    data=pdf_buffer.getvalue(),
+                    file_name=f"informe_reservorio_{inf['id']}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
+
+            with col_excel:
+                st.download_button(
+                    "Descargar informe Excel",
+                    data=excel_buffer.getvalue(),
+                    file_name=f"informe_reservorio_{inf['id']}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True,
+                )
+
