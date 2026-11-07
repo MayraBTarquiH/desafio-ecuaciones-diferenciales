@@ -7,8 +7,8 @@ EDO de primer orden con condición inicial · Método de Heun · Runge-Kutta 4 �
 - **Autora:** Tarqui Humerez Mayra Belen
 - **Materia:** Métodos Numéricos
 - **Aplicación web:** https://desafio-ecuaciones-diferenciales-a9jrw6aht6t4r2dze7pukp.streamlit.app/
-- **Video (1 min):** _Pega aquí el enlace_
-
+- **Video (1 min):** https://youtu.be/lDhrBNXsnkk
+  
 > **Nota:** Los parámetros del modelo son hipotéticos. Los resultados representan simulaciones matemáticas y no predicciones comprobadas con datos reales.
 
 ## 1. Problema
